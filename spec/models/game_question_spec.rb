@@ -8,11 +8,11 @@ RSpec.describe GameQuestion, type: :model do
 
   # задаем локальную переменную game_question, доступную во всех тестах этого сценария
   # она будет создана на фабрике заново для каждого блока it, где она вызывается
-  let(:game_question) { FactoryGirl.create(:game_question, a: 2, b: 1, c: 4, d: 3) }
+  let(:game_question) { FactoryBot.create(:game_question, a: 2, b: 1, c: 4, d: 3) }
 
   # группа тестов на игровое состояние объекта вопроса
   context 'game status' do
-    # тест на правильную генерацию хэша с вариантами
+    # тест на правильную генерацию хэша с вариантами 
     it 'correct .variants' do
       expect(game_question.variants).to eq({'a' => game_question.question.answer2,
                                             'b' => game_question.question.answer1,
@@ -44,6 +44,14 @@ RSpec.describe GameQuestion, type: :model do
 
       ah = game_question.help_hash[:audience_help]
       expect(ah.keys).to contain_exactly('a', 'b', 'c', 'd')
+    end
+  end
+
+  context 'availability of methods text and level' do
+    # тест на наличие методов делегатов level и text
+    it 'correct .level & .text delegates' do
+      expect(game_question.text).to eq(game_question.question.text)
+      expect(game_question.level).to eq(game_question.question.level)
     end
   end
 end
