@@ -135,32 +135,18 @@ class Game < ActiveRecord::Base
   # false если подсказка уже заюзана.
   #
   # help_type = :fifty_fifty | :audience_help | :friend_call
+
   def use_help(help_type)
-    case help_type
-    when :fifty_fifty
-      unless fifty_fifty_used
-        # ActiveRecord метод toggle! переключает булевое поле сразу в базе
-        toggle!(:fifty_fifty_used)
-        current_game_question.add_fifty_fifty
-        return true
-      end
-    when :audience_help
-      unless audience_help_used
-        toggle!(:audience_help_used)
-        current_game_question.add_audience_help
-        return true
-      end
-    when :friend_call
-      unless friend_call_used
-        toggle!(:friend_call_used)
-        current_game_question.add_friend_call
-        return true
-      end
+    help_types = %i(fifty_fifty audience_help friend_call)
+    help_type = help_type.to_sym
+    raise ArgumentError.new('wrong help_type') unless help_types.include?(help_type)
+
+    unless self["#{help_type}_used"]
+      self["#{help_type}_used"] = true
+      current_game_question.apply_help!(help_type)
+      save
     end
-
-    false
   end
-
 
   # Результат игры, одно из:
   # :fail - игра проиграна из-за неверного вопроса

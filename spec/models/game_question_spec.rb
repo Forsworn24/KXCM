@@ -45,6 +45,38 @@ RSpec.describe GameQuestion, type: :model do
       ah = game_question.help_hash[:audience_help]
       expect(ah.keys).to contain_exactly('a', 'b', 'c', 'd')
     end
+
+    # проверяем работу 50/50
+    it 'correct fifty_fifty' do
+      # сначала убедимся, в подсказках пока нет нужного ключа
+      expect(game_question.help_hash).not_to include(:fifty_fifty)
+      # вызовем подсказку
+      game_question.add_fifty_fifty
+
+      # проверим создание подсказки
+      expect(game_question.help_hash).to include(:fifty_fifty)
+      ff = game_question.help_hash[:fifty_fifty]
+
+      expect(ff).to include('b') # должен остаться правильный вариант
+      expect(ff.size).to eq 2 # всего должно остаться 2 варианта
+    end
+
+    # проверяем работу звонка другу
+    it 'correct friend_call' do
+      # сначала убедимся, в подсказках пока нет нужного ключа
+      expect(game_question.help_hash).not_to include(:friend_call)
+      
+      # вызовем подсказку
+      game_question.add_friend_call
+
+      # проверим создание подсказки
+      expect(game_question.help_hash).to include(:friend_call)
+      friend_call_prompt = game_question.help_hash[:friend_call]
+
+      # имя каждый раз случайное, но конец фразы всегда будет такой, сравниваем по нему
+      expect(friend_call_prompt).to include('считает, что это вариант') 
+      expect(friend_call_prompt).to match(/[ABCD]+/)
+    end
   end
 
   context 'availability of methods text and level' do
@@ -55,8 +87,6 @@ RSpec.describe GameQuestion, type: :model do
     end
   end
 
-
-  
   describe '#correct_answer_key' do
     # метод correct_answer_key должен выводить букву правильного ответа
     # в нашем случае верный ответ всегда под буквой b

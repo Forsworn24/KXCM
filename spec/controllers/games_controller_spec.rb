@@ -131,6 +131,49 @@ RSpec.describe GamesController, type: :controller do
       expect(flash.empty?).to be_truthy
     end
 
+    # тест на отработку "помощи зала"
+    it 'uses audience help' do
+      # сперва проверяем что в подсказках текущего вопроса пусто
+      expect(game_w_questions.current_game_question.help_hash[:audience_help]).not_to be
+      expect(game_w_questions.audience_help_used).to be_falsey
+
+      # фигачим запрос в контроллен с нужным типом
+      put :help, id: game_w_questions.id, help_type: :audience_help
+      game = assigns(:game)
+
+      # проверяем, что игра не закончилась, что флажок установился, и подсказка записалась
+      expect(game.finished?).to be_falsey
+      expect(game.audience_help_used).to be_truthy
+      expect(game.current_game_question.help_hash[:audience_help]).to be
+      expect(game.current_game_question.help_hash[:audience_help].keys).to contain_exactly('a', 'b', 'c', 'd')
+      expect(response).to redirect_to(game_path(game))
+    end
+
+    # тест на обработку использования подсказки 50/50
+    it 'uses fifty_fifty' do
+      # сперва проверяем что в подсказках текущего вопроса пусто
+      expect(game_w_questions.current_game_question.help_hash[:fifty_fifty]).not_to be
+      expect(game_w_questions.fifty_fifty_used).to be_falsey
+
+      # фигачим запрос в контроллен с нужным типом
+      put :help, id: game_w_questions.id, help_type: :fifty_fifty
+      game = assigns(:game)
+
+      # проверяем, что игра не закончилась, что флажок установился, и подсказка записалась
+      expect(game.finished?).to be_falsey
+      expect(game.fifty_fifty_used).to be_truthy
+
+      # проверяем наличие подсказки
+      expect(game.current_game_question.help_hash[:fifty_fifty]).to be
+
+      # проверяем, что осталось только 2 ответа из 4, а также один из них является верным
+      # в нашем случае верный ответ всегда будет - d
+      expect(game.current_game_question.help_hash[:fifty_fifty].size).to eq 2
+      expect(game.current_game_question.help_hash[:fifty_fifty]).to include('d')
+
+      expect(response).to redirect_to(game_path(game))
+    end
+
     it '#show alien game' do
       # создаем новую игру, юзер не прописан, будет создан фабрикой новый
       alien_game = create(:game_with_questions)
