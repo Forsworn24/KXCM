@@ -54,4 +54,15 @@ RSpec.describe GameQuestion, type: :model do
       expect(game_question.level).to eq(game_question.question.level)
     end
   end
+
+
+  
+  describe '#correct_answer_key' do
+    # метод correct_answer_key должен выводить букву правильного ответа
+    # в нашем случае верный ответ всегда под буквой b
+    # следовательно, метод должен возвращать b
+    it 'return correct answer' do
+      expect(game_question.correct_answer_key).to eq('b')
+    end
+  end
 end

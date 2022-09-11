@@ -112,4 +112,64 @@ RSpec.describe Game, type: :model do
       expect(game_w_questions.status).to eq(:money)
     end
   end
+
+  # в текущей игре мы еще не ответили ни на один вопрос
+  # следовательно, ответ будет 
+  describe '#current_game_question' do
+    it 'return question without answer' do
+      expect(game_w_questions.current_game_question).
+        to eq game_w_questions.game_questions[0]
+    end
+  end
+
+  #текущий левел - 0, предыдущий, соответственно - -1
+  describe '#previous_level' do
+    it 'return previous level game' do
+      expect(game_w_questions.previous_level).to eq(-1)
+    end
+  end
+
+  #группа тестов на метод модели answer_current_question
+  describe '#answer_current_question!' do
+    let(:question_with_answers) { game_w_questions.current_game_question }
+    let(:wrong_answer) { %w[a b c d].reject { |answer| answer == question_with_answers.correct_answer_key }.sample }
+
+    context 'when the answer is correct' do
+      it 'return true if answer is correct' do
+        q = game_w_questions.current_game_question
+        expect(game_w_questions.answer_current_question!(q.correct_answer_key)).to be true
+        expect(game_w_questions.finished?).to be false
+        expect(game_w_questions.status).to eq :in_progress
+      end
+    end
+
+    context "when the answer is not correct" do
+      it 'return false not correct answer' do
+        q = game_w_questions.current_game_question
+        expect(game_w_questions.answer_current_question!(wrong_answer)).to be false
+        expect(game_w_questions.finished?).to be true
+        expect(game_w_questions.status).to eq :fail
+      end
+    end
+
+    context "when the answer is given after the time for answer" do
+      it 'return false on is timeout' do
+        game_w_questions.created_at = 2.hours.ago
+        q = game_w_questions.current_game_question
+        expect(game_w_questions.answer_current_question!(q.correct_answer_key)).to be false
+        expect(game_w_questions.finished?).to be true
+        expect(game_w_questions.status).to eq :timeout
+      end
+    end
+
+    context 'when the answer is last question' do
+      it 'return true on correct answer last question' do
+        game_w_questions.current_level = 14
+        q = game_w_questions.current_game_question
+        expect(game_w_questions.answer_current_question!(q.correct_answer_key)).to be true
+        expect(game_w_questions.finished?).to be true
+        expect(game_w_questions.status).to eq :won
+      end
+    end
+  end
 end
