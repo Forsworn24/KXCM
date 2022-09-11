@@ -5,6 +5,7 @@ require File.expand_path('../../config/environment', __FILE__)
 abort("The Rails environment is running in production mode!") if Rails.env.production?
 require 'spec_helper'
 require 'rspec/rails'
+require 'support/factory_bot.rb'
 # Add additional requires below this line. Rails is not loaded until this point!
 
 # специальные "матчеры" - методы, удобные для тестирования валидаций
@@ -33,7 +34,8 @@ RSpec.configure do |config|
 
   # В тестах на контроллеры и представления подключаем специальные
   # хелперы для авторизации с помощью девайс
-  config.include Devise::TestHelpers, type: :controller
+  # config.include Devise::TestHelpers, type: :controller
+  config.include Devise::Test::ControllerHelpers, type: :controller
   config.include Devise::TestHelpers, type: :view
 
   # Подключаем в фичах специальные хелперы для авторизации
