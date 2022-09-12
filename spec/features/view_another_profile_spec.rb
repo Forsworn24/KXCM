@@ -33,7 +33,6 @@ RSpec.feature 'USER see another profile', type: :feature do
     expect(page).to have_content('Александр')
 
     expect(page).not_to have_button('Сменить имя и пароль')
-    expect(page).to have_no_content('Сменить имя и пароль')
 
     expect(page).to have_content '11'
     expect(page).to have_content '01 янв., 11:11'
