@@ -129,46 +129,58 @@ RSpec.describe Game, type: :model do
     end
   end
 
-  #группа тестов на метод модели answer_current_question
+  # группа тестов на метод модели answer_current_question
   describe '#answer_current_question!' do
-    let(:question_with_answers) { game_w_questions.current_game_question }
-    let(:wrong_answer) { %w[a b c d].reject { |answer| answer == question_with_answers.correct_answer_key }.sample }
+    before { game_w_questions.answer_current_question!(answer_key) }
 
-    context 'when the answer is correct' do
-      it 'return true if answer is correct' do
-        q = game_w_questions.current_game_question
-        expect(game_w_questions.answer_current_question!(q.correct_answer_key)).to be true
-        expect(game_w_questions.finished?).to be false
-        expect(game_w_questions.status).to eq :in_progress
+    context 'when answer is correct' do
+      let!(:level) { game_w_questions.current_level }
+      let!(:answer_key) { game_w_questions.current_game_question.correct_answer_key }
+  
+      context 'and question is last' do
+        let!(:level) { Question::QUESTION_LEVELS.max }
+        let!(:game_w_questions) { create(:game_with_questions, current_level: level)  }
+  
+        it 'assigns final prize' do
+          expect(game_w_questions.prize).to eq 1000000
+        end
+  
+        it 'finishes game with status won' do           
+          expect(game_w_questions.status).to eq :won
+        end
+      end
+  
+      context 'and question is not last' do
+        let!(:level) { rand(0..Question::QUESTION_LEVELS.max - 1) }
+        let!(:game_w_questions) { create(:game_with_questions, current_level: level)  }
+        
+        it 'moves to next level' do
+          expect(game_w_questions.current_level).to eq(level + 1)
+        end
+  
+        it 'continues game' do
+          expect(game_w_questions.status).to eq :in_progress
+        end
+      end
+  
+      context 'and time is over' do
+        let!(:game_w_questions) { create(:game_with_questions, created_at: 2.hours.ago, finished_at: Time.now) }
+  
+        it 'finishes game with status timeout' do
+          expect(game_w_questions.status).to eq :timeout
+        end
       end
     end
 
-    context "when the answer is not correct" do
-      it 'return false not correct answer' do
-        q = game_w_questions.current_game_question
-        expect(game_w_questions.answer_current_question!(wrong_answer)).to be false
+    context 'when answer is wrong' do
+      let!(:answer_key) {  %w[a b c d].reject { |answer| answer == game_w_questions.current_game_question.correct_answer_key }.sample }
+  
+      it 'finishes the game' do
         expect(game_w_questions.finished?).to be true
+      end
+  
+      it 'finishes with status fail' do
         expect(game_w_questions.status).to eq :fail
-      end
-    end
-
-    context "when the answer is given after the time for answer" do
-      it 'return false on is timeout' do
-        game_w_questions.created_at = 2.hours.ago
-        q = game_w_questions.current_game_question
-        expect(game_w_questions.answer_current_question!(q.correct_answer_key)).to be false
-        expect(game_w_questions.finished?).to be true
-        expect(game_w_questions.status).to eq :timeout
-      end
-    end
-
-    context 'when the answer is last question' do
-      it 'return true on correct answer last question' do
-        game_w_questions.current_level = 14
-        q = game_w_questions.current_game_question
-        expect(game_w_questions.answer_current_question!(q.correct_answer_key)).to be true
-        expect(game_w_questions.finished?).to be true
-        expect(game_w_questions.status).to eq :won
       end
     end
   end
