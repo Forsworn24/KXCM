@@ -19,6 +19,9 @@ RSpec.describe GamesController, type: :controller do
 
         # передаем параметр params[:letter]
         put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
+        
+        post :create
+        put :take_money, id: game_w_questions.id
       end
       
       it 'stop watching the game' do
@@ -27,9 +30,7 @@ RSpec.describe GamesController, type: :controller do
         expect(flash[:alert]).to be
       end
 
-      it 'forbids creating a game' do
-        post :create
-  
+      it 'forbids creating a game' do  
         game = assigns(:game)
   
         # пустая игра
@@ -66,8 +67,6 @@ RSpec.describe GamesController, type: :controller do
       it 'cant #take_money' do
         # вручную поднимем уровень вопроса до выигрыша 200
         game_w_questions.update_attribute(:current_level, 2)
-  
-        put :take_money, id: game_w_questions.id
   
         game = assigns(:game)
   
