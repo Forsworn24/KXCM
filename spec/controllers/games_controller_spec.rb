@@ -12,10 +12,8 @@ RSpec.describe GamesController, type: :controller do
   # создаем новую игру, юзер не прописан, будет создан фабрикой новый
   let(:alien_game) { create(:game_with_questions) }
 
-
   describe '#show' do
     context 'when anonymous' do
-
       before do
         get :show, id: game_w_questions.id
 
