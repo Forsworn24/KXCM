@@ -15,15 +15,21 @@ RSpec.describe GamesController, type: :controller do
 
   describe '#show' do
     context 'when anonymous' do
-      it 'kick from #show' do
+
+      before do
         get :show, id: game_w_questions.id
 
+        # передаем параметр params[:letter]
+        put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
+      end
+      
+      it 'stop watching the game' do
         expect(response.status).not_to eq 200
         expect(response).to redirect_to(new_user_session_path)
         expect(flash[:alert]).to be
       end
 
-      it 'kick from #create' do
+      it 'forbids creating a game' do
         post :create
   
         game = assigns(:game)
@@ -42,9 +48,6 @@ RSpec.describe GamesController, type: :controller do
       end
 
       it 'cant #answer' do
-        # передаем параметр params[:letter]
-        put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key
-  
         # задаем игру
         game = assigns(:game)
   
