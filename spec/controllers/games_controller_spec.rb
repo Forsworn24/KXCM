@@ -47,7 +47,7 @@ RSpec.describe GamesController, type: :controller do
 
           it 'the game has begun' do
             game = assigns(:game)
-            expect(game.finished?).to be_falsey
+            expect(game.finished?).to be false
           end
 
           it 'the user is himself' do
@@ -67,21 +67,21 @@ RSpec.describe GamesController, type: :controller do
 
         context 'creates another game after the old one' do
           it 'new game not created and nil' do
-            expect(game_w_questions.finished?).to be_falsey
+            expect(game_w_questions.finished?).to be false
             expect { post :create }.to change(Game, :count).by(0)
             game = assigns(:game)
             expect(game).to be_nil
           end
 
           it 'redirect to old game' do
-            expect(game_w_questions.finished?).to be_falsey
+            expect(game_w_questions.finished?).to be false
             expect { post :create }.to change(Game, :count).by(0)
             game = assigns(:game)
             expect(response).to redirect_to(game_path(game_w_questions))
           end
 
           it 'alert exits' do
-            expect(game_w_questions.finished?).to be_falsey
+            expect(game_w_questions.finished?).to be false
             expect { post :create }.to change(Game, :count).by(0)
             game = assigns(:game)
             expect(flash[:alert]).to be
@@ -124,7 +124,7 @@ RSpec.describe GamesController, type: :controller do
         
           it 'the game continues' do
             game = assigns(:game)
-            expect(game.finished?).to be_falsey
+            expect(game.finished?).to be false
           end
 
           it 'level of current game > 0' do
@@ -138,7 +138,7 @@ RSpec.describe GamesController, type: :controller do
           end
 
           it 'no notification' do
-            expect(flash.empty?).to be_truthy
+            expect(flash.empty?).to be true
           end
         end
       end
@@ -186,7 +186,7 @@ RSpec.describe GamesController, type: :controller do
 
           it 'game finished' do
             game = assigns(:game)
-            expect(game.finished?).to be_truthy
+            expect(game.finished?).to be true
           end
 
           it 'price is 200' do
@@ -243,7 +243,7 @@ RSpec.describe GamesController, type: :controller do
 
           it 'the game continues' do
             game = assigns(:game)
-            expect(game.finished?).to be_falsey
+            expect(game.finished?).to be false
           end
 
           it 'the user is himself' do
@@ -288,12 +288,12 @@ RSpec.describe GamesController, type: :controller do
       
       it 'hint used and game not finished' do
         game = assigns(:game)
-        expect(game.finished?).to be_falsey
+        expect(game.finished?).to be false
       end
 
       it 'hint used' do
         game = assigns(:game)
-        expect(game.audience_help_used).to be_truthy
+        expect(game.audience_help_used).to be true
       end
 
       it 'hint used' do
@@ -320,12 +320,12 @@ RSpec.describe GamesController, type: :controller do
       
       it 'hint used and game not finished' do
         game = assigns(:game)
-        expect(game.finished?).to be_falsey
+        expect(game.finished?).to be false
       end
 
       it 'hint used' do
         game = assigns(:game)
-        expect(game.fifty_fifty_used).to be_truthy
+        expect(game.fifty_fifty_used).to be true
       end
 
       it 'hint used' do
