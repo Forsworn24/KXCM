@@ -12,71 +12,10 @@ RSpec.describe GamesController, type: :controller do
   # создаем новую игру, юзер не прописан, будет создан фабрикой новый
   let(:alien_game) { create(:game_with_questions) }
 
-  describe '#show' do
+  describe '#create' do
     context 'when anonymous' do
-      context 'try to see a game' do
-        before { get :show, id: game_w_questions.id }
-
-        it 'stop watching the game and redirect to login' do
-          expect(response).to redirect_to(new_user_session_path)
-        end
-
-        it 'displays alert' do
-          expect(flash[:alert]).to be
-        end
-
-        it 'response not 200' do
-          expect(response.status).not_to eq 200
-        end
-      end
-
       context 'try to create a game' do
         before { post :create }
-
-        it 'game not created' do
-          game = assigns(:game)
-          expect(game).to be_nil
-        end
-
-        it 'stop creating the game and redirect to login' do
-          expect(response).to redirect_to(new_user_session_path)
-        end
-
-        it 'displays alert' do
-          expect(flash[:alert]).to be
-        end
-
-        it 'response not 200' do
-          expect(response.status).not_to eq 200
-        end
-      end
-
-      context 'trying to answer a question' do
-        before { put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key }
-
-        it 'game not created' do
-          game = assigns(:game)
-          expect(game).to be_nil
-        end
-
-        it 'stop creating the game and redirect to login' do
-          expect(response).to redirect_to(new_user_session_path)
-        end
-
-        it 'displays alert' do
-          expect(flash[:alert]).to be
-        end
-
-        it 'response not 200' do
-          expect(response.status).not_to eq 200
-        end
-      end
-
-      context 'trying to get money' do
-        before do
-           put :take_money, id: game_w_questions.id
-           game_w_questions.update_attribute(:current_level, 2)
-        end
 
         it 'game not created' do
           game = assigns(:game)
@@ -126,27 +65,59 @@ RSpec.describe GamesController, type: :controller do
           end
         end
 
-        context 'sees his game' do
-          before { get :show, id: game_w_questions.id }
-
-          it 'the game continues' do
+        context 'creates another game after the old one' do
+          it 'new game not created and nil' do
+            expect(game_w_questions.finished?).to be_falsey
+            expect { post :create }.to change(Game, :count).by(0)
             game = assigns(:game)
-            expect(game.finished?).to be_falsey
+            expect(game).to be_nil
           end
 
-          it 'the user is himself' do
+          it 'redirect to old game' do
+            expect(game_w_questions.finished?).to be_falsey
+            expect { post :create }.to change(Game, :count).by(0)
             game = assigns(:game)
-            expect(game.user).to eq(user)
+            expect(response).to redirect_to(game_path(game_w_questions))
           end
 
-          it 'response 200' do
-            expect(response.status).to eq 200
-          end
-
-          it 'render show template' do
-            expect(response).to render_template('show')
+          it 'alert exits' do
+            expect(game_w_questions.finished?).to be_falsey
+            expect { post :create }.to change(Game, :count).by(0)
+            game = assigns(:game)
+            expect(flash[:alert]).to be
           end
         end
+      end
+    end
+  end
+
+  describe '#answer' do
+    context 'trying to answer a question' do
+      before { put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key }
+
+      it 'game not created' do
+        game = assigns(:game)
+        expect(game).to be_nil
+      end
+
+      it 'stop creating the game and redirect to login' do
+        expect(response).to redirect_to(new_user_session_path)
+      end
+
+      it 'displays alert' do
+        expect(flash[:alert]).to be
+      end
+
+      it 'response not 200' do
+        expect(response.status).not_to eq 200
+      end
+    end
+
+    context 'when registered user' do
+      before { sign_in user }
+
+      context 'and game owner' do
+        before { generate_questions(60) }
 
         context 'answers the questions of his game trythy' do
           before { put :answer, id: game_w_questions.id, letter: game_w_questions.current_game_question.correct_answer_key }
@@ -170,6 +141,42 @@ RSpec.describe GamesController, type: :controller do
             expect(flash.empty?).to be_truthy
           end
         end
+      end
+    end
+  end
+
+  describe '#take_money' do
+    context 'when anonymous' do
+      context 'trying to get money' do
+        before do
+           put :take_money, id: game_w_questions.id
+           game_w_questions.update_attribute(:current_level, 2)
+        end
+
+        it 'game not created' do
+          game = assigns(:game)
+          expect(game).to be_nil
+        end
+
+        it 'stop creating the game and redirect to login' do
+          expect(response).to redirect_to(new_user_session_path)
+        end
+
+        it 'displays alert' do
+          expect(flash[:alert]).to be
+        end
+
+        it 'response not 200' do
+          expect(response.status).not_to eq 200
+        end
+      end
+    end
+
+    context 'when registered user' do
+      before { sign_in user }
+
+      context 'and game owner' do
+        before { generate_questions(60) }
 
         context 'takes the money and ends the game' do
           before do
@@ -202,27 +209,54 @@ RSpec.describe GamesController, type: :controller do
             expect(flash[:warning]).to be
           end
         end
+      end
+    end
+  end
 
-        context 'creates another game after the old one' do
-          it 'new game not created and nil' do
-            expect(game_w_questions.finished?).to be_falsey
-            expect { post :create }.to change(Game, :count).by(0)
+  describe '#show' do
+    context 'when anonymous' do
+      context 'try to see a game' do
+        before { get :show, id: game_w_questions.id }
+
+        it 'stop watching the game and redirect to login' do
+          expect(response).to redirect_to(new_user_session_path)
+        end
+
+        it 'displays alert' do
+          expect(flash[:alert]).to be
+        end
+
+        it 'response not 200' do
+          expect(response.status).not_to eq 200
+        end
+      end
+    end
+
+    context 'when registered user' do
+      before { sign_in user }
+
+      context 'and game owner' do
+        before { generate_questions(60) }
+
+        context 'sees his game' do
+          before { get :show, id: game_w_questions.id }
+
+          it 'the game continues' do
             game = assigns(:game)
-            expect(game).to be_nil
+            expect(game.finished?).to be_falsey
           end
 
-          it 'redirect to old game' do
-            expect(game_w_questions.finished?).to be_falsey
-            expect { post :create }.to change(Game, :count).by(0)
+          it 'the user is himself' do
             game = assigns(:game)
-            expect(response).to redirect_to(game_path(game_w_questions))
+            expect(game.user).to eq(user)
           end
 
-          it 'alert exits' do
-            expect(game_w_questions.finished?).to be_falsey
-            expect { post :create }.to change(Game, :count).by(0)
-            game = assigns(:game)
-            expect(flash[:alert]).to be
+          it 'response 200' do
+            expect(response.status).to eq 200
+          end
+
+          it 'render show template' do
+            expect(response).to render_template('show')
           end
         end
       end
@@ -245,7 +279,7 @@ RSpec.describe GamesController, type: :controller do
     end
   end
 
-  describe '#hints' do
+  describe '#help' do
     context 'user use audience help' do
       before do
         sign_in user
@@ -278,7 +312,7 @@ RSpec.describe GamesController, type: :controller do
       end
     end
 
-    context 'user use audience help' do
+    context 'user use fifty-fifty' do
       before do
         sign_in user
         put :help, id: game_w_questions.id, help_type: :fifty_fifty
